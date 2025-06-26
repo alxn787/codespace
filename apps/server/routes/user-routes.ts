@@ -3,6 +3,7 @@ import { prisma } from "db";
 import { LoginSchema, SignupSchema } from "schema";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { authMiddleware } from "../middleware/middleware";
 
 
 const router = Router();
@@ -70,16 +71,18 @@ router.post("/login", async(req, res)=>{
             return;
         }
 
-        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET??"secret");
-        res.cookie('userAccessToken', token, {
+        const token = jwt.sign({ userId: user.id },process.env.USER_JWT_SECRET??'secret');
+        res.cookie('token', token, {
         maxAge: 1000 * 60 * 60 * 24 * 10,
         httpOnly: true,
       })
       .json({ message: 'User logged in' });
 });
 
-router.get("/", async(req, res)=>{
-    res.json("hello");
+router.get("/auth", authMiddleware, async(req, res)=>{
+    //@ts-ignore
+    const user = req.decodedUser;
+    res.json(user);
 })
 
 export default router;
