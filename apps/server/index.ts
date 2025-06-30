@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user-routes.js";
+import playgroundRoutes from "./routes/playground-routes.js";
 
 const app = express();
 app.use(cookieParser());
@@ -17,6 +18,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1", userRoutes);
+app.use("/api/v1", playgroundRoutes);
 
 
 app.listen(8080, () => {
