@@ -5,8 +5,11 @@ import {
   AppsV1Api,
 } from "@kubernetes/client-node";
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+
 const kc = new KubeConfig();
-kc.loadFromDefault();
+kc.loadFromFile(`${process.env.HOME}/.kube/config`);
 
 const coreV1Api = kc.makeApiClient(CoreV1Api);
 const networkingV1Api = kc.makeApiClient(NetworkingV1Api);

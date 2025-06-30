@@ -1,0 +1,30 @@
+# rbac-fix.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: playground-creator
+  namespace: default # Define the role in the 'default' namespace
+rules:
+- apiGroups: ["apps"] # Permissions for Deployments
+  resources: ["deployments"]
+  verbs: ["create", "get", "update", "patch", "delete", "list", "watch"]
+- apiGroups: [""] # Permissions for Services (core API group)
+  resources: ["services"]
+  verbs: ["create", "get", "update", "patch", "delete", "list", "watch"]
+- apiGroups: ["networking.k8s.io"] # Permissions for Ingresses
+  resources: ["ingresses"]
+  verbs: ["create", "get", "update", "patch", "delete", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: minikube-playground-creator-binding
+  namespace: default # Bind the role in the 'default' namespace
+subjects:
+- kind: User # This specifies that we are binding to a User
+  name: minikube # Replace with the actual user name from your kubeconfig if different
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: playground-creator # Refers to the Role defined above
+  apiGroup: rbac.authorization.k8s.io

@@ -1,4 +1,5 @@
 import * as amqp from "amqplib";
+import { createPlayground } from "./deployment";
 
 interface Playground {
   name: string;
@@ -17,6 +18,8 @@ export async function Consumer() {
   channel.consume(queue, async (message) => {
     if(message){
         const playground: Playground = JSON.parse(message.content.toString());
+
+        createPlayground(playground.name, playground.environment, playground.port);
         console.log(playground);
     }
   });
