@@ -79,6 +79,15 @@ router.post("/login", async(req, res)=>{
       .json({ message: 'User logged in' });
 });
 
+router.post("/logout", async(req, res)=>{
+    try {
+    res.clearCookie('userAccessToken');
+    res.json({ message: 'User logged out' });
+  } catch (e) {
+    res.json({ message: e });
+  }
+})
+
 router.get("/auth", authMiddleware, async(req, res)=>{
     //@ts-ignore
     const user = req.decodedUser;
