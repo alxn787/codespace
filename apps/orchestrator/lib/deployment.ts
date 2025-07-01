@@ -34,7 +34,6 @@ export const createCodeSpace = async (
     `Creating deployment for ${name} with image ${CONTAINER_IMAGE} on port ${port}`,
   );
 
-  // Define the Persistent Volume Claim for PostgreSQL
   const pvc = {
     apiVersion: "v1",
     kind: "PersistentVolumeClaim",
@@ -45,13 +44,12 @@ export const createCodeSpace = async (
       accessModes: ["ReadWriteOnce"],
       resources: {
         requests: {
-          storage: "1Gi", // Request 1GB of storage
+          storage: "1Gi",
         },
       },
     },
   };
 
-  // Define the PostgreSQL Deployment
   const postgresDeployment = {
     apiVersion: "apps/v1",
     kind: "Deployment",
@@ -75,28 +73,28 @@ export const createCodeSpace = async (
           containers: [
             {
               name: "postgres",
-              image: "postgres:13", // Using PostgreSQL 13 image
+              image: "postgres:latest", 
               ports: [
-                { containerPort: 5432 }, // Default PostgreSQL port
+                { containerPort: 5432 }, 
               ],
               env: [
                 {
                   name: "POSTGRES_DB",
-                  value: `${name}_db`, // Database name
+                  value: `${name}_db`, 
                 },
                 {
                   name: "POSTGRES_USER",
-                  value: "user", // Database user
+                  value: "user",
                 },
                 {
                   name: "POSTGRES_PASSWORD",
-                  value: "password", // Database password (for demonstration, use secrets in production)
+                  value: "password", 
                 },
               ],
               volumeMounts: [
                 {
                   name: "postgres-storage",
-                  mountPath: "/var/lib/postgresql/data", // Mount path for PostgreSQL data
+                  mountPath: "/var/lib/postgresql/data", 
                 },
               ],
             },
@@ -105,7 +103,7 @@ export const createCodeSpace = async (
             {
               name: "postgres-storage",
               persistentVolumeClaim: {
-                claimName: `${name}-postgres-pvc`, // Link to the PVC
+                claimName: `${name}-postgres-pvc`, 
               },
             },
           ],
@@ -114,7 +112,7 @@ export const createCodeSpace = async (
     },
   };
 
-  // Define the PostgreSQL Service
+
   const postgresService = {
     apiVersion: "v1",
     kind: "Service",
@@ -131,12 +129,11 @@ export const createCodeSpace = async (
           targetPort: 5432,
         },
       ],
-      type: "ClusterIP", // Expose within the cluster
+      type: "ClusterIP",
     },
   };
 
 
-  // Original application deployment
   const deployment = {
     metadata: {
       name: name,
@@ -163,11 +160,11 @@ export const createCodeSpace = async (
                 { containerPort: port },
                 { containerPort: 5001 },
               ],
-              // Add environment variables to connect to the PostgreSQL database
+    
               env: [
                 {
                   name: "DATABASE_HOST",
-                  value: `${name}-postgres-service`, // PostgreSQL service name
+                  value: `${name}-postgres-service`,
                 },
                 {
                   name: "DATABASE_PORT",
@@ -265,7 +262,6 @@ export const createCodeSpace = async (
   };
 
   try {
-    // Create Persistent Volume Claim
     console.log(`Creating PVC: ${pvc.metadata.name}`);
     const createdPvc = await coreV1Api.createNamespacedPersistentVolumeClaim(
      {namespace :"default",
