@@ -15,7 +15,7 @@ const coreV1Api = kc.makeApiClient(CoreV1Api);
 const networkingV1Api = kc.makeApiClient(NetworkingV1Api);
 const appsV1Api = kc.makeApiClient(AppsV1Api);
 
-export const createPlayground = async (
+export const createCodeSpace = async (
   name: string,
   environment: string,
   port: number,
@@ -23,7 +23,7 @@ export const createPlayground = async (
   let CONTAINER_IMAGE = "";
 
   if (environment === "reactjs") {
-    CONTAINER_IMAGE = "tarunclub/tensor-react-playground-env:1.0.0";
+    CONTAINER_IMAGE = "httpd";
   } else if (environment === "nodejs") {
     CONTAINER_IMAGE = "tarunclub/tensor-nodejs-playground-env:1.0.0";
   } else {

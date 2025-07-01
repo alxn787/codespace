@@ -14,7 +14,7 @@ export async function PublishMessage(
   const connection = await amqp.connect("amqp://localhost");
   const channel = await connection.createChannel();
 
-  const queue = "playground";
+  const queue = "codespace";
   await channel.assertQueue(queue, { durable: true });
 
   const playground: Playground = {

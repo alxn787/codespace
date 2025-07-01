@@ -1,7 +1,7 @@
 import * as amqp from "amqplib";
-import { createPlayground } from "./deployment";
+import { createCodeSpace } from "./deployment";
 
-interface Playground {
+interface CodeSpace {
   name: string;
   environment: string;
   port: number;
@@ -12,20 +12,20 @@ export async function Consumer() {
   const connection = await amqp.connect("amqp://localhost");
   const channel = await connection.createChannel();
 
-  const queue = "playground";
+  const queue = "codespace";
   await channel.assertQueue(queue, { durable: true });
 
-  try{
-        channel.consume(queue, async (message) => {
-            if(message){
-                const playground: Playground = JSON.parse(message.content.toString());
+  channel.consume(queue, async (message) => {
+      if(message){
+          const CodeSpace: CodeSpace = JSON.parse(message.content.toString());
+            try{
 
-                createPlayground(playground.name, playground.environment, playground.port);
-                console.log(playground);
+                await createCodeSpace(CodeSpace.name, CodeSpace.environment, CodeSpace.port);
+                // console.log(CodeSpace);
                 channel.ack(message);
+            }catch(e){
+                console.log("Error consuming message", e);
             }
-        });
-    }catch(e){
-        console.log(e);
-    }
+        }
+    });
 }
