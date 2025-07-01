@@ -23,9 +23,9 @@ export const createCodeSpace = async (
   let CONTAINER_IMAGE = "";
 
   if (environment === "reactjs") {
-    CONTAINER_IMAGE = "httpd";
+    CONTAINER_IMAGE = "alxn787/react-codespace:2";
   } else if (environment === "nodejs") {
-    CONTAINER_IMAGE = "tarunclub/tensor-nodejs-playground-env:1.0.0";
+    CONTAINER_IMAGE = "alxn787/node-codespace:2";
   } else {
     throw new Error(`Unsupported environment: ${environment}`);
   }
@@ -34,6 +34,109 @@ export const createCodeSpace = async (
     `Creating deployment for ${name} with image ${CONTAINER_IMAGE} on port ${port}`,
   );
 
+  // Define the Persistent Volume Claim for PostgreSQL
+  const pvc = {
+    apiVersion: "v1",
+    kind: "PersistentVolumeClaim",
+    metadata: {
+      name: `${name}-postgres-pvc`,
+    },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      resources: {
+        requests: {
+          storage: "1Gi", // Request 1GB of storage
+        },
+      },
+    },
+  };
+
+  // Define the PostgreSQL Deployment
+  const postgresDeployment = {
+    apiVersion: "apps/v1",
+    kind: "Deployment",
+    metadata: {
+      name: `${name}-postgres`,
+    },
+    spec: {
+      replicas: 1,
+      selector: {
+        matchLabels: {
+          app: `${name}-postgres`,
+        },
+      },
+      template: {
+        metadata: {
+          labels: {
+            app: `${name}-postgres`,
+          },
+        },
+        spec: {
+          containers: [
+            {
+              name: "postgres",
+              image: "postgres:13", // Using PostgreSQL 13 image
+              ports: [
+                { containerPort: 5432 }, // Default PostgreSQL port
+              ],
+              env: [
+                {
+                  name: "POSTGRES_DB",
+                  value: `${name}_db`, // Database name
+                },
+                {
+                  name: "POSTGRES_USER",
+                  value: "user", // Database user
+                },
+                {
+                  name: "POSTGRES_PASSWORD",
+                  value: "password", // Database password (for demonstration, use secrets in production)
+                },
+              ],
+              volumeMounts: [
+                {
+                  name: "postgres-storage",
+                  mountPath: "/var/lib/postgresql/data", // Mount path for PostgreSQL data
+                },
+              ],
+            },
+          ],
+          volumes: [
+            {
+              name: "postgres-storage",
+              persistentVolumeClaim: {
+                claimName: `${name}-postgres-pvc`, // Link to the PVC
+              },
+            },
+          ],
+        },
+      },
+    },
+  };
+
+  // Define the PostgreSQL Service
+  const postgresService = {
+    apiVersion: "v1",
+    kind: "Service",
+    metadata: {
+      name: `${name}-postgres-service`,
+    },
+    spec: {
+      selector: {
+        app: `${name}-postgres`,
+      },
+      ports: [
+        {
+          port: 5432,
+          targetPort: 5432,
+        },
+      ],
+      type: "ClusterIP", // Expose within the cluster
+    },
+  };
+
+
+  // Original application deployment
   const deployment = {
     metadata: {
       name: name,
@@ -59,6 +162,29 @@ export const createCodeSpace = async (
               ports: [
                 { containerPort: port },
                 { containerPort: 5001 },
+              ],
+              // Add environment variables to connect to the PostgreSQL database
+              env: [
+                {
+                  name: "DATABASE_HOST",
+                  value: `${name}-postgres-service`, // PostgreSQL service name
+                },
+                {
+                  name: "DATABASE_PORT",
+                  value: "5432",
+                },
+                {
+                  name: "DATABASE_NAME",
+                  value: `${name}_db`,
+                },
+                {
+                  name: "DATABASE_USER",
+                  value: "user",
+                },
+                {
+                  name: "DATABASE_PASSWORD",
+                  value: "password",
+                },
               ],
             },
           ],
@@ -139,30 +265,45 @@ export const createCodeSpace = async (
   };
 
   try {
-    const createdDeployment = await appsV1Api.createNamespacedDeployment(
-      {
-        namespace: "default",
-        body: deployment,
-      }
+    // Create Persistent Volume Claim
+    console.log(`Creating PVC: ${pvc.metadata.name}`);
+    const createdPvc = await coreV1Api.createNamespacedPersistentVolumeClaim(
+     {namespace :"default",
+      body:pvc}
     );
+    console.log("Created PVC:", createdPvc.metadata?.name);
+
+    const createdPostgresDeployment = await appsV1Api.createNamespacedDeployment(
+      {namespace:"default",
+      body:postgresDeployment}
+    );
+    console.log("Created PostgreSQL Deployment:", createdPostgresDeployment.metadata?.name);
+
+    const createdPostgresService = await coreV1Api.createNamespacedService(
+    { namespace:"default",
+      body:postgresService}
+    );
+    console.log("Created PostgreSQL Service:", createdPostgresService.metadata?.name);
+
+
+    const createdDeployment = await appsV1Api.createNamespacedDeployment(
+     {namespace:"default",
+      body:deployment}
+    );
+    console.log("Created Deployment:", createdDeployment.metadata?.name);
 
     const createdService = await coreV1Api.createNamespacedService(
-      {
-        namespace: "default",
-        body: service,
-      }
+      {namespace:"default",
+      body:service}
     );
+    console.log("Created Service:", createdService.metadata?.name);
 
     const createdIngress = await networkingV1Api.createNamespacedIngress(
-        {
-            namespace: "default",
-            body: ingress,
-        }
+       {namespace:"default",
+       body:ingress}
     );
-
-    console.log("Created Deployment:", createdDeployment.metadata?.creationTimestamp);
-    console.log("Created Service:", createdService.metadata?.creationTimestamp);
     console.log("Created Ingress:", createdIngress.metadata?.name);
+
   } catch (err) {
     console.error("Error creating playground resources:", err);
   }
