@@ -15,12 +15,17 @@ export async function Consumer() {
   const queue = "playground";
   await channel.assertQueue(queue, { durable: true });
 
-  channel.consume(queue, async (message) => {
-    if(message){
-        const playground: Playground = JSON.parse(message.content.toString());
+  try{
+        channel.consume(queue, async (message) => {
+            if(message){
+                const playground: Playground = JSON.parse(message.content.toString());
 
-        createPlayground(playground.name, playground.environment, playground.port);
-        console.log(playground);
+                createPlayground(playground.name, playground.environment, playground.port);
+                console.log(playground);
+                channel.ack(message);
+            }
+        });
+    }catch(e){
+        console.log(e);
     }
-  });
 }
