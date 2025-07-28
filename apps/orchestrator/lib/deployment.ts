@@ -3,7 +3,7 @@ import {
   KubeConfig,
   NetworkingV1Api,
   AppsV1Api,
-} from "@kubernetes/client-node";
+} from "@kubernetes/client-node";4
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -262,24 +262,24 @@ export const createCodeSpace = async (
   };
 
   try {
-    console.log(`Creating PVC: ${pvc.metadata.name}`);
-    const createdPvc = await coreV1Api.createNamespacedPersistentVolumeClaim(
-     {namespace :"default",
-      body:pvc}
-    );
-    console.log("Created PVC:", createdPvc.metadata?.name);
+    // console.log(`Creating PVC: ${pvc.metadata.name}`);
+    // const createdPvc = await coreV1Api.createNamespacedPersistentVolumeClaim(
+    //  {namespace :"default",
+    //   body:pvc}
+    // );
+    // console.log("Created PVC:", createdPvc.metadata?.name);
 
-    const createdPostgresDeployment = await appsV1Api.createNamespacedDeployment(
-      {namespace:"default",
-      body:postgresDeployment}
-    );
-    console.log("Created PostgreSQL Deployment:", createdPostgresDeployment.metadata?.name);
+    // const createdPostgresDeployment = await appsV1Api.createNamespacedDeployment(
+    //   {namespace:"default",
+    //   body:postgresDeployment}
+    // );
+    // console.log("Created PostgreSQL Deployment:", createdPostgresDeployment.metadata?.name);
 
-    const createdPostgresService = await coreV1Api.createNamespacedService(
-    { namespace:"default",
-      body:postgresService}
-    );
-    console.log("Created PostgreSQL Service:", createdPostgresService.metadata?.name);
+    // const createdPostgresService = await coreV1Api.createNamespacedService(
+    // { namespace:"default",
+    //   body:postgresService}
+    // );
+    // console.log("Created PostgreSQL Service:", createdPostgresService.metadata?.name);
 
 
     const createdDeployment = await appsV1Api.createNamespacedDeployment(
